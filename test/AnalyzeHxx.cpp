@@ -10,6 +10,7 @@
 #include "TFile.h"
 #include "TH1F.h"
 #include "TTree.h"
+#include "TNtuple.h"
 #include "TRandom.h"
 #include "TLorentzVector.h"
 
@@ -85,26 +86,9 @@ int main(int argc, char *argv[])
    cutflow_tool cutflow;
    histogram_manager h0mll(new TH1F("h0mll","",60,60.0,120.0));
 
-     h0mll.add_sample(9000, "_DAS");
-     h0mll.add_sample(9001, "_PU");
-     h0mll.add_sample(9002, "_NO_PU");
-     
-     cutflow.add_sample_name(9000, "DAS");
-     cutflow.add_sample_name(9001, "PU");
-     cutflow.add_sample_name(9002, "NO_PU");
+   h0mll.add_sample(1, "_data");
 
-     h0mll.add_sample(20, "_hxx_1GeV");
-     h0mll.add_sample(21, "_hxx_10GeV");
-     h0mll.add_sample(22, "_hxx_100GeV");
-     h0mll.add_sample(23, "_hxx_500GeV");
-     h0mll.add_sample(24, "_hxx_1000GeV");
-     
-     cutflow.add_sample_name(20, "hxx_1GeV"); 
-     cutflow.add_sample_name(21, "hxx_10GeV"); 
-     cutflow.add_sample_name(22, "hxx_100GeV"); 
-     cutflow.add_sample_name(23, "hxx_500GeV"); 
-     cutflow.add_sample_name(24, "hxx_1000GeV"); 
-
+   cutflow.add_sample_name(1, "DATA");
    
    h0mll.add_auto_write(aw);
 
@@ -124,19 +108,16 @@ int main(int argc, char *argv[])
    hfit_sig500.Sumw2();
    hfit_sig1000.Sumw2();
    
-   //control plots (no pre-selection)
-   histogram_manager hcnjet  (new TH1F("hcnjet",  "", 10,  0.0, 10.0),     h0mll, aw);
-   histogram_manager hcmjjon (new TH1F("hcmjjon", "", 75,  0.0, 150.0),    h0mll, aw);
-   histogram_manager hcmjjoff(new TH1F("hcmjjoff","", 100, 0.0, 500.0),    h0mll, aw);
-
-   //test new variables
-   histogram_manager htestx  (new TH1F("htestx",  "", 25,  0.0, 3.2),      h0mll, aw);
-   histogram_manager htesty  (new TH1F("htesty",  "", 25,  0.0, 200.0),    h0mll, aw);
+   //Book histograms
+   histogram_manager histZZMass  (new TH1F("histZZMass", "", 100, 0.0, 150.0), h0mll, aw);
+   //TH1F * ZZMass  = new TH1F("ZZMass", "", 100, 0, 200);
+   histogram_manager PFMET  (new TH1F("PFMET", "", 100, 0.0, 150.0), h0mll, aw);
  
    cout << "INFO: opening file: " << infile << "\n";
 
    TFile * file = new TFile(infile.c_str());
-   TTree * data = (TTree*) file->Get("SelectedTree");
+   //TNtuple * data = (TNtuple*) file->Get("SelectedTree");
+   TTree* data = (TTree*) file->Get("SelectedTree");
 
    if (! data) {
       cout << "ERROR:  could not open tree.\n";
@@ -145,12 +126,18 @@ int main(int argc, char *argv[])
    
    long int numberOfEntries = data->GetEntries();
 
-   data->Print();
+   //data->Print();
+   //data->ls();
   
    int count = 0;
    int nupdate = numberOfEntries / 20;
    if (nupdate < 1) nupdate=1;
    cout << "PROGRESS:  ";
+
+   float ZZMass;
+   int genProcessId;
+   data->SetBranchAddress("ZZMass", &ZZMass);
+   data->SetBranchAddress("genProcessId", &genProcessId);
 
    int prescale  = 0; 
    int iprescale = 0;
@@ -169,7 +156,11 @@ int main(int argc, char *argv[])
       
       data->GetEntry(entry);
 
-      cutflow.increment(0, 1, 1);      
+      //cout << ZZMass << endl;
+      histZZMass  .Fill(1, ZZMass); 
+      //genProcessId??
+
+      //cutflow.increment(0, 1, 1);      
       //cutflow.increment(0, data.sample, data.weight);      
 
       // fill limit setting histograms:
