@@ -86,10 +86,22 @@ int main(int argc, char *argv[])
    cutflow_tool cutflow;
    histogram_manager h0mll(new TH1F("h0mll","",60,60.0,120.0));
 
-   h0mll.add_sample(1, "_data");
+   h0mll.add_sample(0, "_data");
+   cutflow.add_sample_name(0, "DATA");
+   h0mll.add_sample(11113, "_2e2mu");
+   cutflow.add_sample_name(11113, "2E2MU");
+   h0mll.add_sample(11115, "_2e2tau");
+   cutflow.add_sample_name(11115, "2E2TAU");
+   h0mll.add_sample(11315, "_2mu2tau");
+   cutflow.add_sample_name(11315, "2MU2TAU");
+   h0mll.add_sample(11111, "_4e");
+   cutflow.add_sample_name(11111, "4E");
+   h0mll.add_sample(11313, "_4mu");
+   cutflow.add_sample_name(11313, "4MU");
+   h0mll.add_sample(11515, "_4tau");
+   cutflow.add_sample_name(11515, "4TAU");
 
-   cutflow.add_sample_name(1, "DATA");
-   
+
    h0mll.add_auto_write(aw);
 
    TH1F hfit_bkg("sample_1","",  100,0.0,300.0);
@@ -109,14 +121,13 @@ int main(int argc, char *argv[])
    hfit_sig1000.Sumw2();
    
    //Book histograms
-   histogram_manager histZZMass  (new TH1F("histZZMass", "", 100, 0.0, 150.0), h0mll, aw);
-   //TH1F * ZZMass  = new TH1F("ZZMass", "", 100, 0, 200);
-   histogram_manager PFMET  (new TH1F("PFMET", "", 100, 0.0, 150.0), h0mll, aw);
- 
+   histogram_manager histZZMass     (new TH1F("histZZMass", "", 100, 70.0, 800.0), h0mll, aw);
+   histogram_manager histPFMET      (new TH1F("histPFMET", "", 10, 0.0, 30.0), h0mll, aw);
+   histogram_manager histPFMETctrl  (new TH1F("histPFMETctrl", "", 30, 0.0, 300.0), h0mll, aw);
+
    cout << "INFO: opening file: " << infile << "\n";
 
    TFile * file = new TFile(infile.c_str());
-   //TNtuple * data = (TNtuple*) file->Get("SelectedTree");
    TTree* data = (TTree*) file->Get("SelectedTree");
 
    if (! data) {
@@ -135,9 +146,11 @@ int main(int argc, char *argv[])
    cout << "PROGRESS:  ";
 
    float ZZMass;
-   int genProcessId;
+   short genProcessId;
+   float PFMET;
    data->SetBranchAddress("ZZMass", &ZZMass);
    data->SetBranchAddress("genProcessId", &genProcessId);
+   data->SetBranchAddress("PFMET", &PFMET);
 
    int prescale  = 0; 
    int iprescale = 0;
@@ -155,9 +168,16 @@ int main(int argc, char *argv[])
       }
       
       data->GetEntry(entry);
+      
+      //if(PFMET > 75) continue; 
 
-      //cout << ZZMass << endl;
-      histZZMass  .Fill(1, ZZMass); 
+      histZZMass .Fill(genProcessId, ZZMass, 0.000617832); 
+      histPFMET  .Fill(genProcessId, PFMET, 0.000617832);
+      
+      if(ZZMass > 95 && ZZMass < 155) continue;
+
+      histPFMETctrl.Fill(genProcessId, PFMET, 0.000617832);
+      
       //genProcessId??
 
       //cutflow.increment(0, 1, 1);      
@@ -171,6 +191,7 @@ int main(int argc, char *argv[])
 
    cout << "SUMMARY:  read " << count << " of " << data->GetEntries() << " events from analysis tree.\n";
    
+     
    TFile * foutroot = new TFile(outroot.c_str(), "RECREATE");
    foutroot->cd();
    aw.WriteAll();
@@ -178,8 +199,8 @@ int main(int argc, char *argv[])
 
    cout << "SUMMARY:  done writing files.\n";
 
-   cout << "Cutflow:  Stage 0 \n";
-   cutflow.print(0);
+   //cout << "Cutflow:  Stage 0 \n";
+   //cutflow.print(0);
 
    char name[100];
    TFile * f = NULL;
