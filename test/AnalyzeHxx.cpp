@@ -22,7 +22,7 @@ using namespace std;
 using namespace kutil;
 
 void usage(){
-   cout << "usage:  AnalyzeHxx  [OPTIONS] <input_file> <output_root> <output_dir>\n";
+   cout << "usage:  AnalyzeHxx  [OPTIONS] <input_file> <output_root> <output_dir> <run_id>\n";
    cout << "\n";
    exit(0);
 }
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
    TRandom rng;
    rng.SetSeed(2014);
    
-   std::string opt, infile, outroot, outdir;
+   std::string opt, infile, outroot, outdir, runname, runid;
    koptions options(argc, argv);
    
    //check for the --help option:
@@ -69,24 +69,35 @@ int main(int argc, char *argv[])
       usage();
    } 
 
-   if (options.size() != 3){
+   if (options.size() != 5){
       usage();
    }
 
    options.shift_argument(infile);
    options.shift_argument(outroot);
    options.shift_argument(outdir);
+   options.shift_argument(runname);
+   options.shift_argument(runid);
 
-   cout << "INFO: reading analysis tree file:    " << infile  << "\n";
-   cout << "INFO: writing histogram root file:   " << outroot << "\n";
-   cout << "INFO: writing results to directory:  " << outdir  << "\n";
+   cout << "INFO: Reading ntuple:                " << infile  << "\n";
+   cout << "INFO: Using run name:                " << runname << "\n";
+   cout << "INFO: Using run ID:                  " << runid   << "\n";
+   cout << "INFO: Writing histogram root file:   " << outroot << "\n";
+   cout << "INFO: Writing results to directory:  " << outdir  << "\n"; 
 
    auto_write aw;
 
    cutflow_tool cutflow;
    histogram_manager h0mll(new TH1F("h0mll","",60,60.0,120.0));
+   
+   char title[100];
+   sprintf(title, "_%s", runname.c_str());
+   int id = atoi(runid.c_str()); 
 
-   h0mll.add_sample(0, "_data");
+   h0mll.add_sample(id, title);
+   cutflow.add_sample_name(id, runname.c_str());
+   
+   /*h0mll.add_sample(0, "_data");
    cutflow.add_sample_name(0, "DATA");
    h0mll.add_sample(11113, "_2e2mu");
    cutflow.add_sample_name(11113, "2E2MU");
@@ -100,8 +111,8 @@ int main(int argc, char *argv[])
    cutflow.add_sample_name(11313, "4MU");
    h0mll.add_sample(11515, "_4tau");
    cutflow.add_sample_name(11515, "4TAU");
-
-
+   */
+   
    h0mll.add_auto_write(aw);
 
    TH1F hfit_bkg("sample_1","",  100,0.0,300.0);
@@ -171,15 +182,13 @@ int main(int argc, char *argv[])
       
       //if(PFMET > 75) continue; 
 
-      histZZMass .Fill(genProcessId, ZZMass, 0.000617832); 
-      histPFMET  .Fill(genProcessId, PFMET, 0.000617832);
+      histZZMass .Fill(id, ZZMass, 0.000617832); 
+      histPFMET  .Fill(id, PFMET, 0.000617832);
       
       if(ZZMass > 95 && ZZMass < 155) continue;
 
-      histPFMETctrl.Fill(genProcessId, PFMET, 0.000617832);
+      histPFMETctrl.Fill(id, PFMET, 0.000617832);
       
-      //genProcessId??
-
       //cutflow.increment(0, 1, 1);      
       //cutflow.increment(0, data.sample, data.weight);      
 
@@ -192,7 +201,7 @@ int main(int argc, char *argv[])
    cout << "SUMMARY:  read " << count << " of " << data->GetEntries() << " events from analysis tree.\n";
    
      
-   TFile * foutroot = new TFile(outroot.c_str(), "RECREATE");
+   TFile * foutroot = new TFile(outroot.c_str(), "UPDATE");
    foutroot->cd();
    aw.WriteAll();
    foutroot->Close();
