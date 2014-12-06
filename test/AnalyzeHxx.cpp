@@ -94,6 +94,8 @@ int main(int argc, char *argv[])
    sprintf(title, "_%s", runname.c_str());
    int id = atoi(runid.c_str()); 
 
+   cout << "TEST:  " << title << " " << id << endl;
+
    h0mll.add_sample(id, title);
    cutflow.add_sample_name(id, runname.c_str());
    
@@ -137,9 +139,18 @@ int main(int argc, char *argv[])
    histogram_manager histPFMETctrl  (new TH1F("histPFMETctrl", "", 30, 0.0, 300.0), h0mll, aw);
 
    cout << "INFO: opening file: " << infile << "\n";
-
-   TFile * file = new TFile(infile.c_str());
-   TTree* data = (TTree*) file->Get("SelectedTree");
+  
+   TFile* file = NULL;
+   TTree* data = NULL;
+   if(id < 100){
+     file = new TFile(infile.c_str());
+     data = (TTree*) file->Get("SelectedTree");
+   }
+   else{
+     file = new TFile(infile.c_str());
+     TDirectoryFile * dir = (TDirectoryFile*) file->Get("demo");
+     data = (TTree*) dir->Get("hxxtree");
+   }
 
    if (! data) {
       cout << "ERROR:  could not open tree.\n";
@@ -182,6 +193,7 @@ int main(int argc, char *argv[])
       
       //if(PFMET > 75) continue; 
 
+      if(entry < 20) cout << "TEST:  " << id << " " << ZZMass << endl;
       histZZMass .Fill(id, ZZMass, 0.000617832); 
       histPFMET  .Fill(id, PFMET, 0.000617832);
       
