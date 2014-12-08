@@ -53,14 +53,15 @@ void cutflow_tool::print(int stage){
 
    double bkg = 0;
    for (int i=0; i<x.size(); i++){
-     if (i < 20) bkg+= x[i];
+     if (i >= 20 && i < 100) bkg+= x[i];
+     //if (i < 20) bkg+= x[i];
    }
    cout << "Total Background:  " << bkg << "\n";
 
    if (bkg <= 0.0) return;
    
    for (int i=0; i<x.size(); i++){
-     if (i >= 20){
+     if (i >= 100){
        if ((sample_names.size() > i) && (sample_names[i] != ""))
 	 cout << setw(10) << sample_names[i];
        else 

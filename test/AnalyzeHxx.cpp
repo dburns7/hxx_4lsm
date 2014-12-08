@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
    sprintf(title, "_%s", runname.c_str());
    int id = atoi(runid.c_str()); 
 
-   cout << "TEST:  " << title << " " << id << endl;
+   //cout << "TEST:  " << title << " " << id << endl;
 
    h0mll.add_sample(id, title);
    cutflow.add_sample_name(id, runname.c_str());
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
       
       //if(PFMET > 75) continue; 
 
-      if(entry < 20) cout << "TEST:  " << id << " " << ZZMass << endl;
+      //if(entry < 20) cout << "TEST:  " << id << " " << ZZMass << endl;
       histZZMass .Fill(id, ZZMass, 0.000617832); 
       histPFMET  .Fill(id, PFMET, 0.000617832);
       
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 
       histPFMETctrl.Fill(id, PFMET, 0.000617832);
       
-      //cutflow.increment(0, 1, 1);      
+      cutflow.increment(0, id, 1);      
       //cutflow.increment(0, data.sample, data.weight);      
 
       // fill limit setting histograms:
@@ -220,8 +220,8 @@ int main(int argc, char *argv[])
 
    cout << "SUMMARY:  done writing files.\n";
 
-   //cout << "Cutflow:  Stage 0 \n";
-   //cutflow.print(0);
+   cout << "Cutflow:  Stage 0 \n";
+   cutflow.print(0);
 
    char name[100];
    TFile * f = NULL;
